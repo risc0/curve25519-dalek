@@ -70,6 +70,13 @@ cfg_if! {
         /// The `FieldElement` type is an alias for one of the platform-specific
         /// implementations.
         pub type FieldElement = backend::serial::u64::field::FieldElement51;
+    } else if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+        /// A `FieldElement` represents an element of the field
+        /// \\( \mathbb Z / (2\^{255} - 19)\\).
+        ///
+        /// The `FieldElement` type is an alias for one of the platform-specific
+        /// implementations.
+        pub type FieldElement = backend::serial::risc0::field::FieldElementR0;
     } else {
         pub use backend::serial::u32::field::*;
 

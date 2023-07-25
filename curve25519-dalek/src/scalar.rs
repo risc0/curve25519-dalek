@@ -173,6 +173,12 @@ cfg_if! {
         /// module.
         #[cfg_attr(docsrs, doc(cfg(curve25519_dalek_bits = "64")))]
         type UnpackedScalar = backend::serial::u64::scalar::Scalar52;
+    } else if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+        /// An `UnpackedScalar` represents an element of the field GF(l), optimized for speed.
+        ///
+        /// This is a type alias for one of the scalar types in the `backend`
+        /// module.
+        type UnpackedScalar = backend::serial::risc0::scalar::ScalarR0;
     } else {
         /// An `UnpackedScalar` represents an element of the field GF(l), optimized for speed.
         ///
