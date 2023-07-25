@@ -17,6 +17,8 @@ use hex::FromHex;
 #[cfg(feature = "digest")]
 use hex_literal::hex;
 
+mod testvectors;
+
 #[cfg(test)]
 mod vectors {
     use super::*;
@@ -31,10 +33,11 @@ mod vectors {
 
     use std::{
         convert::TryFrom,
-        fs::File,
         io::{BufRead, BufReader},
         ops::Neg,
     };
+
+    use testvectors::TESTVECTORS;
 
     // TESTVECTORS is taken from sign.input.gz in agl's ed25519 Golang
     // package. It is a selection of test cases from
@@ -45,16 +48,7 @@ mod vectors {
         let mut line: String;
         let mut lineno: usize = 0;
 
-        let f = File::open("TESTVECTORS");
-        if f.is_err() {
-            println!(
-                "This test is only available when the code has been cloned \
-                 from the git repository, since the TESTVECTORS file is large \
-                 and is therefore not included within the distributed crate."
-            );
-            panic!();
-        }
-        let file = BufReader::new(f.unwrap());
+        let file = BufReader::new(TESTVECTORS.as_bytes());
 
         for l in file.lines() {
             lineno += 1;
