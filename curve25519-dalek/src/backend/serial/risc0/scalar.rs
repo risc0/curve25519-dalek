@@ -35,15 +35,12 @@ impl Zeroize for ScalarR0 {
 }
 
 impl ScalarR0 {
-    /// The scalar \\( 0 \\).
-    pub const ZERO: ScalarR0 = ScalarR0(U256::ZERO);
-
     /// The scalar \\( -1 mod L \\).
     pub const MINUS_ONE: ScalarR0 = ScalarR0(U256::from_be_hex(
         "1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3EC",
     ));
 
-    /// Unpack a 32 byte / 256 bit scalar into 9 29-bit limbs.
+    /// Unpack a 32 byte / 256 bit scalar.
     pub fn from_bytes(bytes: &[u8; 32]) -> ScalarR0 {
         ScalarR0(U256::from_le_bytes(*bytes))
     }
@@ -94,16 +91,9 @@ impl ScalarR0 {
         ScalarR0(result)
     }
 
-    /// Compute `a * b`
-    #[inline(always)]
-    pub(crate) fn mul_internal(a: &ScalarR0, b: &ScalarR0) -> ScalarR0 {
-        ScalarR0::mul(a, b)
-    }
-
-    /// Compute `limbs/R` (mod l), where R is the Montgomery modulus 2^261
-    #[inline(always)]
-    pub(crate) fn montgomery_reduce(a: &ScalarR0) -> ScalarR0 {
-        let result = risc0::modmul_u256(&a.0, &R_INVERSE, &constants::L.0);
+    /// Compute `a` (mod l).
+    pub fn reduce(a: &ScalarR0) -> ScalarR0 {
+        let result = risc0::modmul_u256(&a.0, &U256::ONE, &constants::L.0);
         ScalarR0(result)
     }
 

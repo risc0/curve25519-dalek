@@ -141,6 +141,7 @@ use subtle::CtOption;
 use zeroize::Zeroize;
 
 use crate::backend;
+#[cfg(not(all(target_os = "zkvm", target_arch = "riscv32")))]
 use crate::constants;
 
 cfg_if! {
@@ -1129,8 +1130,16 @@ impl Scalar {
     #[allow(non_snake_case)]
     fn reduce(&self) -> Scalar {
         let x = self.unpack();
-        let xR = UnpackedScalar::mul_internal(&x, &constants::R);
-        let x_mod_l = UnpackedScalar::montgomery_reduce(&xR);
+
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                let x_mod_l = UnpackedScalar::reduce(&x);
+            } else {
+                let xR = UnpackedScalar::mul_internal(&x, &constants::R);
+                let x_mod_l = UnpackedScalar::montgomery_reduce(&xR);
+            }
+        }
+
         x_mod_l.pack()
     }
 
