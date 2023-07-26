@@ -133,7 +133,7 @@ impl FieldElementR0 {
 
     /// Invert the sign of this field element
     pub fn negate(&mut self) {
-        let result = self.0.neg_mod(&P);
+        let result = risc0::modmul_u256(&self.0, &Self::MINUS_ONE.0, &P);
         self.0 = result;
     }
 
