@@ -38,6 +38,11 @@ impl ScalarR0 {
     /// The scalar \\( 0 \\).
     pub const ZERO: ScalarR0 = ScalarR0(U256::ZERO);
 
+    /// The scalar \\( -1 mod L \\).
+    pub const MINUS_ONE: ScalarR0 = ScalarR0(U256::from_be_hex(
+        "1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3EC",
+    ));
+
     /// Unpack a 32 byte / 256 bit scalar into 9 29-bit limbs.
     pub fn from_bytes(bytes: &[u8; 32]) -> ScalarR0 {
         ScalarR0(U256::from_le_bytes(*bytes))
@@ -80,6 +85,12 @@ impl ScalarR0 {
     /// Compute `a - b` (mod l).
     pub fn sub(a: &ScalarR0, b: &ScalarR0) -> ScalarR0 {
         let result = a.0.sub_mod(&b.0, &constants::L.0);
+        ScalarR0(result)
+    }
+
+    /// Compute `-1 * a` (mod l).
+    pub fn negate(a: &ScalarR0) -> ScalarR0 {
+        let result = risc0::modmul_u256(&a.0, &Self::MINUS_ONE.0, &constants::L.0);
         ScalarR0(result)
     }
 

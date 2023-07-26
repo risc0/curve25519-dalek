@@ -373,9 +373,15 @@ impl<'a> Neg for &'a Scalar {
     type Output = Scalar;
     #[allow(non_snake_case)]
     fn neg(self) -> Scalar {
-        let self_R = UnpackedScalar::mul_internal(&self.unpack(), &constants::R);
-        let self_mod_l = UnpackedScalar::montgomery_reduce(&self_R);
-        UnpackedScalar::sub(&UnpackedScalar::ZERO, &self_mod_l).pack()
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                UnpackedScalar::negate(&self.unpack()).pack()
+            } else {
+                let self_R = UnpackedScalar::mul_internal(&self.unpack(), &constants::R);
+                let self_mod_l = UnpackedScalar::montgomery_reduce(&self_R);
+                UnpackedScalar::sub(&UnpackedScalar::ZERO, &self_mod_l).pack()
+            }
+        }
     }
 }
 
