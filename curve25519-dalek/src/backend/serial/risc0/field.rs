@@ -1,20 +1,5 @@
-// -*- mode: rust; -*-
-//
-// This file is part of curve25519-dalek.
-// Copyright (c) 2016-2021 isis lovecruft
-// Copyright (c) 2016-2019 Henry de Valence
-// See LICENSE for licensing information.
-//
-// Authors:
-// - isis agora lovecruft <isis@patternsinthevoid.net>
-// - Henry de Valence <hdevalence@hdevalence.ca>
-
 //! Field arithmetic modulo \\(p = 2\^{255} - 19\\), using \\(32\\)-bit
 //! limbs with \\(64\\)-bit products.
-//!
-//! This code was originally derived from Adam Langley's Golang ed25519
-//! implementation, and was then rewritten to use unsigned limbs instead
-//! of signed limbs.
 
 use core::fmt::Debug;
 use core::ops::Neg;
