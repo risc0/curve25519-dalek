@@ -36,7 +36,11 @@ pub struct FieldElementR0(pub(crate) U256);
 
 impl Debug for FieldElementR0 {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-        write!(f, "FieldElementR0({:?})", &self.0)
+        write!(
+            f,
+            "FieldElementR0(U256::from_be_hex({:?}))",
+            hex::encode(&self.0.to_be_bytes())
+        )
     }
 }
 

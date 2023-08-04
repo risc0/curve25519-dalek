@@ -126,6 +126,8 @@
 use core::fmt::Debug;
 use core::ops::{Add, Neg, Sub};
 
+use cfg_if::cfg_if;
+
 use subtle::Choice;
 use subtle::ConditionallySelectable;
 
@@ -383,13 +385,25 @@ impl ProjectivePoint {
         let XX = self.X.square();
         let YY = self.Y.square();
         let ZZ2 = self.Z.square2();
-        let X_plus_Y = &self.X + &self.Y;
-        let X_plus_Y_sq = X_plus_Y.square();
         let YY_plus_XX = &YY + &XX;
         let YY_minus_XX = &YY - &XX;
 
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                // According to https://en.wikipedia.org/wiki/Edwards_curve#Doubling,
+                // (x + y)^2 - x^2 - y^2 is used as an optimization for computing 2xy.
+                // However, multiplication is faster inside the zkvm so we compute
+                // 2xy directly instead.
+                let new_x = &(&FieldElement::TWO * &self.X) * &self.Y;
+            } else {
+                let X_plus_Y = &self.X + &self.Y;
+                let X_plus_Y_sq = X_plus_Y.square();
+                let new_x = &X_plus_Y_sq - &YY_plus_XX;
+            }
+        }
+
         CompletedPoint {
-            X: &X_plus_Y_sq - &YY_plus_XX,
+            X: new_x,
             Y: YY_plus_XX,
             Z: YY_minus_XX,
             T: &ZZ2 - &YY_minus_XX,
@@ -418,7 +432,14 @@ impl<'a, 'b> Add<&'b ProjectiveNielsPoint> for &'a EdwardsPoint {
         let MM = &Y_minus_X * &other.Y_minus_X;
         let TT2d = &self.T * &other.T2d;
         let ZZ = &self.Z * &other.Z;
-        let ZZ2 = &ZZ + &ZZ;
+
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                let ZZ2 = &FieldElement::TWO * &ZZ;
+            } else {
+                let ZZ2 = &ZZ + &ZZ;
+            }
+        }
 
         CompletedPoint {
             X: &PP - &MM,
@@ -440,7 +461,14 @@ impl<'a, 'b> Sub<&'b ProjectiveNielsPoint> for &'a EdwardsPoint {
         let MP = &Y_minus_X * &other.Y_plus_X;
         let TT2d = &self.T * &other.T2d;
         let ZZ = &self.Z * &other.Z;
-        let ZZ2 = &ZZ + &ZZ;
+
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                let ZZ2 = &FieldElement::TWO * &ZZ;
+            } else {
+                let ZZ2 = &ZZ + &ZZ;
+            }
+        }
 
         CompletedPoint {
             X: &PM - &MP,
@@ -461,7 +489,14 @@ impl<'a, 'b> Add<&'b AffineNielsPoint> for &'a EdwardsPoint {
         let PP = &Y_plus_X * &other.y_plus_x;
         let MM = &Y_minus_X * &other.y_minus_x;
         let Txy2d = &self.T * &other.xy2d;
-        let Z2 = &self.Z + &self.Z;
+
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                let Z2 = &FieldElement::TWO * &self.Z;
+            } else {
+                let Z2 = &self.Z + &self.Z;
+            }
+        }
 
         CompletedPoint {
             X: &PP - &MM,
@@ -482,7 +517,14 @@ impl<'a, 'b> Sub<&'b AffineNielsPoint> for &'a EdwardsPoint {
         let PM = &Y_plus_X * &other.y_minus_x;
         let MP = &Y_minus_X * &other.y_plus_x;
         let Txy2d = &self.T * &other.xy2d;
-        let Z2 = &self.Z + &self.Z;
+
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                let Z2 = &FieldElement::TWO * &self.Z;
+            } else {
+                let Z2 = &self.Z + &self.Z;
+            }
+        }
 
         CompletedPoint {
             X: &PM - &MP,

@@ -1271,6 +1271,7 @@ pub const fn clamp_integer(mut bytes: [u8; 32]) -> [u8; 32] {
 #[cfg(test)]
 pub(crate) mod test {
     use super::*;
+    #[cfg(not(all(target_os = "zkvm", target_arch = "riscv32")))]
     use crate::constants;
 
     #[cfg(feature = "alloc")]
@@ -1641,10 +1642,16 @@ pub(crate) mod test {
         assert_eq!(reduced.bytes, expected.bytes);
 
         //  (x + 2^256x) * R
-        let interim =
-            UnpackedScalar::mul_internal(&UnpackedScalar::from_bytes_wide(&bignum), &constants::R);
-        // ((x + 2^256x) * R) / R  (mod l)
-        let montgomery_reduced = UnpackedScalar::montgomery_reduce(&interim);
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+                let montgomery_reduced = UnpackedScalar::reduce(&UnpackedScalar::from_bytes_wide(&bignum));
+            } else {
+                let interim =
+                    UnpackedScalar::mul_internal(&UnpackedScalar::from_bytes_wide(&bignum), &constants::R);
+                // ((x + 2^256x) * R) / R  (mod l)
+                let montgomery_reduced = UnpackedScalar::montgomery_reduce(&interim);
+            }
+        }
 
         // The Montgomery reduced scalar should match the reduced one, as well as the expected
         assert_eq!(montgomery_reduced.0, reduced.unpack().0);

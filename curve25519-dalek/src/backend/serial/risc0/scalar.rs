@@ -242,7 +242,7 @@ mod test {
     #[test]
     fn add() {
         let res = ScalarR0::add(&A, &B);
-        let zero = ScalarR0::ZERO;
+        let zero = ScalarR0(U256::ZERO);
         assert!(res.0 == zero.0);
     }
 
