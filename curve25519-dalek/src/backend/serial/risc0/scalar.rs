@@ -58,10 +58,11 @@ impl ScalarR0 {
                 .expect("unable to parse high 32 bytes"),
         );
 
-        let hi_shifted_left_256 = risc0::modmul_u256(&hi, &TWO_POW_TWO_FIFTY_SIX, &constants::L.0);
+        let hi_shifted_left_256 =
+            risc0::modmul_u256_denormalized(&hi, &TWO_POW_TWO_FIFTY_SIX, &constants::L.0);
         // add_mod assumes the lhs + rhs is less than 2p. To guarantee this, we need to mod
         // lo and hi by L
-        let lo = risc0::modmul_u256(&lo, &U256::ONE, &constants::L.0);
+        let lo = risc0::modmul_u256_denormalized(&lo, &U256::ONE, &constants::L.0);
         let total = hi_shifted_left_256.add_mod(&lo, &constants::L.0);
 
         ScalarR0(total)
@@ -87,20 +88,20 @@ impl ScalarR0 {
 
     /// Compute `-1 * a` (mod l).
     pub fn negate(a: &ScalarR0) -> ScalarR0 {
-        let result = risc0::modmul_u256(&a.0, &Self::MINUS_ONE.0, &constants::L.0);
+        let result = risc0::modmul_u256_denormalized(&a.0, &Self::MINUS_ONE.0, &constants::L.0);
         ScalarR0(result)
     }
 
     /// Compute `a` (mod l).
     pub fn reduce(a: &ScalarR0) -> ScalarR0 {
-        let result = risc0::modmul_u256(&a.0, &U256::ONE, &constants::L.0);
+        let result = risc0::modmul_u256_denormalized(&a.0, &U256::ONE, &constants::L.0);
         ScalarR0(result)
     }
 
     /// Compute `a * b` (mod l).
     #[inline(never)]
     pub fn mul(a: &ScalarR0, b: &ScalarR0) -> ScalarR0 {
-        let ab = risc0::modmul_u256(&a.0, &b.0, &constants::L.0);
+        let ab = risc0::modmul_u256_denormalized(&a.0, &b.0, &constants::L.0);
         ScalarR0(ab)
     }
 
@@ -108,15 +109,15 @@ impl ScalarR0 {
     #[inline(never)]
     #[allow(dead_code)] // XXX we don't expose square() via the Scalar API
     pub fn square(&self) -> ScalarR0 {
-        let aa = risc0::modmul_u256(&self.0, &self.0, &constants::L.0);
+        let aa = risc0::modmul_u256_denormalized(&self.0, &self.0, &constants::L.0);
         ScalarR0(aa)
     }
 
     /// Compute `(a * b) / R` (mod l), where R is the Montgomery modulus 2^261
     #[inline(never)]
     pub fn montgomery_mul(a: &ScalarR0, b: &ScalarR0) -> ScalarR0 {
-        let ab = risc0::modmul_u256(&a.0, &b.0, &constants::L.0);
-        let ab_r_inverse = risc0::modmul_u256(&ab, &R_INVERSE, &constants::L.0);
+        let ab = risc0::modmul_u256_denormalized(&a.0, &b.0, &constants::L.0);
+        let ab_r_inverse = risc0::modmul_u256_denormalized(&ab, &R_INVERSE, &constants::L.0);
         ScalarR0(ab_r_inverse)
     }
 
@@ -124,21 +125,22 @@ impl ScalarR0 {
     #[inline(never)]
     pub fn montgomery_square(&self) -> ScalarR0 {
         let squared = self.square();
-        let squared_r_inverse = risc0::modmul_u256(&squared.0, &R_INVERSE, &constants::L.0);
+        let squared_r_inverse =
+            risc0::modmul_u256_denormalized(&squared.0, &R_INVERSE, &constants::L.0);
         ScalarR0(squared_r_inverse)
     }
 
     /// Puts a ScalarR0 in to Montgomery form, i.e. computes `a*R (mod l)`
     #[inline(never)]
     pub fn as_montgomery(&self) -> ScalarR0 {
-        let result = risc0::modmul_u256(&self.0, &constants::R.0, &constants::L.0);
+        let result = risc0::modmul_u256_denormalized(&self.0, &constants::R.0, &constants::L.0);
         ScalarR0(result)
     }
 
     /// Takes a ScalarR0 out of Montgomery form, i.e. computes `a/R (mod l)`
     #[allow(clippy::wrong_self_convention)]
     pub fn from_montgomery(&self) -> ScalarR0 {
-        let a_r_inverse = risc0::modmul_u256(&self.0, &R_INVERSE, &constants::L.0);
+        let a_r_inverse = risc0::modmul_u256_denormalized(&self.0, &R_INVERSE, &constants::L.0);
         ScalarR0(a_r_inverse)
     }
 }

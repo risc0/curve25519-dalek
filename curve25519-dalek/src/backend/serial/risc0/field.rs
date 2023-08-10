@@ -31,6 +31,9 @@ use zeroize::Zeroize;
 const P: U256 =
     U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFED");
 
+// Low two words of 2^256 - P, used for correcting the value after addition mod 2^256.
+const MODULUS_CORRECTION: U256 = U256::ZERO.wrapping_sub(&P);
+
 #[derive(Copy, Clone)]
 pub struct FieldElementR0(pub(crate) U256);
 
@@ -52,9 +55,37 @@ impl Zeroize for FieldElementR0 {
 }
 
 impl<'b> AddAssign<&'b FieldElementR0> for FieldElementR0 {
-    fn add_assign(&mut self, _rhs: &'b FieldElementR0) {
-        let result = self.0.add_mod(&_rhs.0, &P);
-        self.0 = result
+    fn add_assign(&mut self, rhs: &'b FieldElementR0) {
+        let self_limbs = self.0.as_limbs();
+        let rhs_limbs = rhs.0.as_limbs();
+        let correction_limbs = MODULUS_CORRECTION.as_limbs();
+
+        // Carrying addition of self and rhs, with the overflow correction added in.
+        let (a0, carry0) = self_limbs[0].adc(rhs_limbs[0], correction_limbs[0]);
+        let (a1, carry1) =
+            self_limbs[1].adc(rhs_limbs[1], carry0.wrapping_add(correction_limbs[1]));
+        let (a2, carry2) =
+            self_limbs[2].adc(rhs_limbs[2], carry1.wrapping_add(correction_limbs[2]));
+        let (a3, carry3) =
+            self_limbs[3].adc(rhs_limbs[3], carry2.wrapping_add(correction_limbs[3]));
+        let (a4, carry4) =
+            self_limbs[4].adc(rhs_limbs[4], carry3.wrapping_add(correction_limbs[4]));
+        let (a5, carry5) =
+            self_limbs[5].adc(rhs_limbs[5], carry4.wrapping_add(correction_limbs[5]));
+        let (a6, carry6) =
+            self_limbs[6].adc(rhs_limbs[6], carry5.wrapping_add(correction_limbs[6]));
+        let (a7, carry7) =
+            self_limbs[7].adc(rhs_limbs[7], carry6.wrapping_add(correction_limbs[7]));
+        let a = U256::from([a0, a1, a2, a3, a4, a5, a6, a7]);
+
+        // If a carry occured, then the correction was already added and the result is correct.
+        // If a carry did not occur, the correction needs to be removed. Result will be in [0, p).
+        // Wrap and unwrap to prevent the compiler interpreting this as a boolean, potentially
+        // introducing non-constant time code.
+        self.0 = a;
+        if Choice::from(carry7.0 as u8).unwrap_u8() != 1 {
+            self.0 = self.0.wrapping_sub(&MODULUS_CORRECTION);
+        }
     }
 }
 
@@ -85,7 +116,7 @@ impl<'a, 'b> Sub<&'b FieldElementR0> for &'a FieldElementR0 {
 
 impl<'b> MulAssign<&'b FieldElementR0> for FieldElementR0 {
     fn mul_assign(&mut self, _rhs: &'b FieldElementR0) {
-        let result = risc0::modmul_u256(&self.0, &_rhs.0, &P);
+        let result = risc0::modmul_u256_denormalized(&self.0, &_rhs.0, &P);
         self.0 = result;
     }
 }
@@ -137,7 +168,7 @@ impl FieldElementR0 {
 
     /// Invert the sign of this field element
     pub fn negate(&mut self) {
-        let result = risc0::modmul_u256(&self.0, &Self::MINUS_ONE.0, &P);
+        let result = risc0::modmul_u256_denormalized(&self.0, &Self::MINUS_ONE.0, &P);
         self.0 = result;
     }
 
@@ -156,7 +187,7 @@ impl FieldElementR0 {
     pub fn from_bytes(data: &[u8; 32]) -> FieldElementR0 {
         let val: U256 = U256::from_le_bytes(*data);
         let val = val.bitand(&Self::LOW_255_BITS);
-        let val = risc0::modmul_u256(&val, &FieldElementR0::ONE.0, &P);
+        let val = risc0::modmul_u256_denormalized(&val, &FieldElementR0::ONE.0, &P);
         FieldElementR0(val)
     }
 
@@ -169,14 +200,14 @@ impl FieldElementR0 {
 
     /// Compute `self^2`.
     pub fn square(&self) -> FieldElementR0 {
-        let result = risc0::modmul_u256(&self.0, &self.0, &P);
+        let result = risc0::modmul_u256_denormalized(&self.0, &self.0, &P);
         FieldElementR0(result)
     }
 
     /// Compute `2*self^2`.
     pub fn square2(&self) -> FieldElementR0 {
         let squared = self.square();
-        let result = risc0::modmul_u256(&Self::TWO.0, &squared.0, &P);
+        let result = risc0::modmul_u256_denormalized(&Self::TWO.0, &squared.0, &P);
         FieldElementR0(result)
     }
 }
