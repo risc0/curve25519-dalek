@@ -16,15 +16,16 @@ use elliptic_curve::{
 use zeroize::Zeroize;
 
 /// A `FieldElementR0` represents an element of the field
-/// \\( \mathbb Z / (2\^{255} - 19)\\).
+/// \\( \mathbb Z / (2\^{255} - 19)\\). `FieldElementR0`
+/// leverages RISC0's big integer accelerated zkvm circuit.
 ///
 /// # Note
 ///
 /// The `curve25519_dalek::field` module provides a type alias
-/// `curve25519_dalek::field::FieldElement` to either `FieldElement51`
-/// or `FieldElement2625`.
+/// `curve25519_dalek::field::FieldElement` to either `FieldElement51`,
+/// `FieldElement2625` or `FieldElementR0`.
 ///
-/// The backend-specific type `FieldElement2625` should not be used
+/// The backend-specific type `FieldElementR0` should not be used
 /// outside of the `curve25519_dalek::field` module.
 
 /// prime 2^255 - 19 which defines the field.
