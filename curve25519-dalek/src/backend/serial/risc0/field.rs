@@ -163,9 +163,6 @@ impl FieldElementR0 {
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC",
     ));
 
-    const LOW_255_BITS: U256 =
-        U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-
     /// Invert the sign of this field element
     pub fn negate(&mut self) {
         let result = risc0::modmul_u256_denormalized(&self.0, &Self::MINUS_ONE.0, &P);
@@ -185,8 +182,10 @@ impl FieldElementR0 {
     /// Load a `FieldElementR0` from the low 255 bits of a 256-bit
     /// input.
     pub fn from_bytes(data: &[u8; 32]) -> FieldElementR0 {
-        let val: U256 = U256::from_le_bytes(*data);
-        let val = val.bitand(&Self::LOW_255_BITS);
+        let mut val: U256 = U256::from_le_bytes(*data);
+        let val_words = val.as_words_mut();
+        val_words[7] = val_words[7] & 2147483647;
+        let val = U256::from_words(*val_words);
         let val = risc0::modmul_u256_denormalized(&val, &FieldElementR0::ONE.0, &P);
         FieldElementR0(val)
     }

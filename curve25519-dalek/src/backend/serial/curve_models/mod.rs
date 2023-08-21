@@ -126,8 +126,6 @@
 use core::fmt::Debug;
 use core::ops::{Add, Neg, Sub};
 
-use cfg_if::cfg_if;
-
 use subtle::Choice;
 use subtle::ConditionallySelectable;
 
@@ -388,7 +386,7 @@ impl ProjectivePoint {
         let YY_plus_XX = &YY + &XX;
         let YY_minus_XX = &YY - &XX;
 
-        cfg_if! {
+        cfg_if::cfg_if! {
             if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
                 // According to https://en.wikipedia.org/wiki/Edwards_curve#Doubling,
                 // (x + y)^2 - x^2 - y^2 is used as an optimization for computing 2xy.
@@ -433,7 +431,7 @@ impl<'a, 'b> Add<&'b ProjectiveNielsPoint> for &'a EdwardsPoint {
         let TT2d = &self.T * &other.T2d;
         let ZZ = &self.Z * &other.Z;
 
-        cfg_if! {
+        cfg_if::cfg_if! {
             if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
                 let ZZ2 = &FieldElement::TWO * &ZZ;
             } else {
@@ -462,7 +460,7 @@ impl<'a, 'b> Sub<&'b ProjectiveNielsPoint> for &'a EdwardsPoint {
         let TT2d = &self.T * &other.T2d;
         let ZZ = &self.Z * &other.Z;
 
-        cfg_if! {
+        cfg_if::cfg_if! {
             if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
                 let ZZ2 = &FieldElement::TWO * &ZZ;
             } else {
@@ -490,7 +488,7 @@ impl<'a, 'b> Add<&'b AffineNielsPoint> for &'a EdwardsPoint {
         let MM = &Y_minus_X * &other.y_minus_x;
         let Txy2d = &self.T * &other.xy2d;
 
-        cfg_if! {
+        cfg_if::cfg_if! {
             if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
                 let Z2 = &FieldElement::TWO * &self.Z;
             } else {
@@ -518,7 +516,7 @@ impl<'a, 'b> Sub<&'b AffineNielsPoint> for &'a EdwardsPoint {
         let MP = &Y_minus_X * &other.y_plus_x;
         let Txy2d = &self.T * &other.xy2d;
 
-        cfg_if! {
+        cfg_if::cfg_if! {
             if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
                 let Z2 = &FieldElement::TWO * &self.Z;
             } else {
