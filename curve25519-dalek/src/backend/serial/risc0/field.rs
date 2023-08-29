@@ -7,10 +7,8 @@ use core::ops::{Add, AddAssign};
 use core::ops::{Mul, MulAssign};
 use core::ops::{Sub, SubAssign};
 
-use elliptic_curve::{
-    bigint::{risc0, Encoding, U256},
-    subtle::{Choice, ConditionallySelectable},
-};
+use crypto_bigint::{risc0, Encoding, U256};
+use subtle::{Choice, ConditionallySelectable};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -195,7 +193,8 @@ impl FieldElementR0 {
     /// encoding is canonical.
     #[allow(clippy::identity_op)]
     pub fn as_bytes(&self) -> [u8; 32] {
-        self.0.to_le_bytes()
+        let val = risc0::modmul_u256(&self.0, &FieldElementR0::ONE.0, &P);
+        val.to_le_bytes()
     }
 
     /// Compute `self^2`.

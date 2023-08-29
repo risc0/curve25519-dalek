@@ -2,7 +2,7 @@
 //! with RISC0 Acceleration
 
 use core::fmt::Debug;
-use elliptic_curve::bigint::{risc0, Encoding, U256};
+use crypto_bigint::{risc0, Encoding, U256};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -58,11 +58,10 @@ impl ScalarR0 {
                 .expect("unable to parse high 32 bytes"),
         );
 
-        let hi_shifted_left_256 =
-            risc0::modmul_u256_denormalized(&hi, &TWO_POW_TWO_FIFTY_SIX, &constants::L.0);
+        let hi_shifted_left_256 = risc0::modmul_u256(&hi, &TWO_POW_TWO_FIFTY_SIX, &constants::L.0);
         // add_mod assumes the lhs + rhs is less than 2p. To guarantee this, we need to mod
         // lo and hi by L
-        let lo = risc0::modmul_u256_denormalized(&lo, &U256::ONE, &constants::L.0);
+        let lo = risc0::modmul_u256(&lo, &U256::ONE, &constants::L.0);
         let total = hi_shifted_left_256.add_mod(&lo, &constants::L.0);
 
         ScalarR0(total)
@@ -71,7 +70,8 @@ impl ScalarR0 {
     /// Pack the limbs of this `ScalarR0` into 32 bytes.
     #[allow(clippy::identity_op)]
     pub fn as_bytes(&self) -> [u8; 32] {
-        self.0.to_le_bytes()
+        let val = risc0::modmul_u256(&self.0, &U256::ONE, &constants::L.0);
+        val.to_le_bytes()
     }
 
     /// Compute `a + b` (mod l).

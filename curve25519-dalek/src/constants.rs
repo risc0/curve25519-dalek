@@ -197,7 +197,7 @@ mod test {
     #[cfg(all(target_os = "zkvm"))]
     fn test_d_vs_ratio() {
         use crate::backend::serial::risc0::field::FieldElementR0;
-        use elliptic_curve::bigint::U256;
+        use crypto_bigint::U256;
 
         let a = -&FieldElementR0(U256::from_be_hex(
             "000000000000000000000000000000000000000000000000000000000001db41",

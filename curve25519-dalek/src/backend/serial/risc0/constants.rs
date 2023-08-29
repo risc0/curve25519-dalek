@@ -2,7 +2,7 @@ use super::field::FieldElementR0;
 use super::scalar::ScalarR0;
 use crate::edwards::EdwardsPoint;
 
-use elliptic_curve::bigint::U256;
+use crypto_bigint::U256;
 
 #[cfg(feature = "precomputed-tables")]
 use crate::{
