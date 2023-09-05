@@ -17,8 +17,6 @@ use hex::FromHex;
 #[cfg(feature = "digest")]
 use hex_literal::hex;
 
-mod testvectors;
-
 #[cfg(test)]
 mod vectors {
     use super::*;
@@ -37,8 +35,6 @@ mod vectors {
         ops::Neg,
     };
 
-    use testvectors::TESTVECTORS;
-
     // TESTVECTORS is taken from sign.input.gz in agl's ed25519 Golang
     // package. It is a selection of test cases from
     // http://ed25519.cr.yp.to/python/sign.input
@@ -48,7 +44,8 @@ mod vectors {
         let mut line: String;
         let mut lineno: usize = 0;
 
-        let file = BufReader::new(TESTVECTORS.as_bytes());
+        let testvectors_bytes = include_bytes!("../TESTVECTORS");
+        let file = BufReader::new(testvectors_bytes.as_slice());
 
         for l in file.lines() {
             lineno += 1;

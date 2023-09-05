@@ -4,8 +4,6 @@ use ed25519_dalek::{Signature, VerifyingKey};
 use serde::{de::Error as SError, Deserialize, Deserializer};
 use std::collections::BTreeSet as Set;
 
-mod validationvectors;
-
 /// The set of edge cases that [`VerifyingKey::verify()`] permits.
 const VERIFY_ALLOWED_EDGECASES: &[Flag] = &[
     Flag::LowOrderA,
@@ -117,9 +115,8 @@ where
 }
 
 fn get_test_vectors() -> impl Iterator<Item = TestVector> {
-    use validationvectors::VALIDATIONVECTORS;
-
-    serde_json::from_reader::<_, Vec<IntermediateTestVector>>(VALIDATIONVECTORS.as_bytes())
+    let validationvectors_bytes = include_bytes!("../VALIDATIONVECTORS");
+    serde_json::from_reader::<_, Vec<IntermediateTestVector>>(validationvectors_bytes.as_slice())
         .unwrap()
         .into_iter()
         .map(TestVector::from)
