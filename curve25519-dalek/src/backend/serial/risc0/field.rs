@@ -60,6 +60,7 @@ impl<'b> AddAssign<&'b FieldElementR0> for FieldElementR0 {
         let correction_limbs = MODULUS_CORRECTION.as_limbs();
 
         // Carrying addition of self and rhs, with the overflow correction added in.
+        // Correction is added to carries with wrapping_add since they cannot overflow.
         let (a0, carry0) = self_limbs[0].adc(rhs_limbs[0], correction_limbs[0]);
         let (a1, carry1) =
             self_limbs[1].adc(rhs_limbs[1], carry0.wrapping_add(correction_limbs[1]));
@@ -75,16 +76,25 @@ impl<'b> AddAssign<&'b FieldElementR0> for FieldElementR0 {
             self_limbs[6].adc(rhs_limbs[6], carry5.wrapping_add(correction_limbs[6]));
         let (a7, carry7) =
             self_limbs[7].adc(rhs_limbs[7], carry6.wrapping_add(correction_limbs[7]));
-        let a = U256::from([a0, a1, a2, a3, a4, a5, a6, a7]);
+        self.0 = U256::from([a0, a1, a2, a3, a4, a5, a6, a7]);
+
+        // If the inputs are not in the range [0, p), then then carry7 may be greater than 1,
+        // indicating more than one overflow occurred. In this case, the code below will not
+        // correct the value. If the host is cooperative, this should never happen.
+        assert!(carry7.0 <= 1);
 
         // If a carry occured, then the correction was already added and the result is correct.
         // If a carry did not occur, the correction needs to be removed. Result will be in [0, p).
         // Wrap and unwrap to prevent the compiler interpreting this as a boolean, potentially
         // introducing non-constant time code.
-        self.0 = a;
-        if Choice::from(carry7.0 as u8).unwrap_u8() != 1 {
-            self.0 = self.0.wrapping_sub(&MODULUS_CORRECTION);
-        }
+        let mask = 1 - Choice::from(carry7.0 as u8).unwrap_u8();
+        let c0 = MODULUS_CORRECTION.as_words()[0] * (mask as u32);
+        let c7 = MODULUS_CORRECTION.as_words()[7] * (mask as u32);
+        let correction = U256::from_words([c0, 0, 0, 0, 0, 0, 0, c7]);
+
+        // The correction value was either already added to a, or is 0, so this sub will not
+        // underflow.
+        self.0 = self.0.wrapping_sub(&correction);
     }
 }
 
