@@ -8,7 +8,7 @@ use core::ops::{Mul, MulAssign};
 use core::ops::{Sub, SubAssign};
 
 use crypto_bigint::{risc0, Encoding, U256};
-use subtle::{Choice, ConditionallySelectable};
+use subtle::{Choice, ConditionallySelectable, ConstantTimeLess};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -109,8 +109,7 @@ impl<'a, 'b> Add<&'b FieldElementR0> for &'a FieldElementR0 {
 
 impl<'b> SubAssign<&'b FieldElementR0> for FieldElementR0 {
     fn sub_assign(&mut self, _rhs: &'b FieldElementR0) {
-        let result = self.0.sub_mod(&_rhs.0, &P);
-        self.0 = result
+        self.add_assign(&_rhs.neg());
     }
 }
 
@@ -193,7 +192,7 @@ impl FieldElementR0 {
     pub fn from_bytes(data: &[u8; 32]) -> FieldElementR0 {
         let mut val: U256 = U256::from_le_bytes(*data);
         let val_words = val.as_words_mut();
-        val_words[7] = val_words[7] & 2147483647;
+        val_words[7] = val_words[7] & 0x7FFFFFFF;
         let val = U256::from_words(*val_words);
         let val = risc0::modmul_u256_denormalized(&val, &FieldElementR0::ONE.0, &P);
         FieldElementR0(val)
@@ -203,8 +202,10 @@ impl FieldElementR0 {
     /// encoding is canonical.
     #[allow(clippy::identity_op)]
     pub fn as_bytes(&self) -> [u8; 32] {
-        let val = risc0::modmul_u256(&self.0, &FieldElementR0::ONE.0, &P);
-        val.to_le_bytes()
+        // Check that the output is normalized. This will always be the case if the host is
+        // cooperative.
+        assert!(self.0.ct_lt(&P).unwrap_u8() == 1);
+        self.0.to_le_bytes()
     }
 
     /// Compute `self^2`.
