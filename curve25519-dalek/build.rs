@@ -103,7 +103,9 @@ mod deterministic {
         let platform = match platforms::Platform::find(&target_triplet) {
             Some(p) => p,
             None => {
-                determine_curve25519_dalek_bits_warning(ERR_MSG_NO_PLATFORM);
+                if target_triplet != "riscv32im-risc0-zkvm-elf" {
+                    determine_curve25519_dalek_bits_warning(ERR_MSG_NO_PLATFORM);
+                }
                 return DalekBits::Dalek32;
             }
         };
