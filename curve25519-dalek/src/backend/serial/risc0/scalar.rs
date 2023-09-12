@@ -125,7 +125,7 @@ impl ScalarR0 {
     #[inline(never)]
     pub fn montgomery_square(&self) -> ScalarR0 {
         let squared = risc0::modmul_u256_denormalized(&self.0, &self.0, &constants::L.0);
-        let squared_r_inverse = risc0::modmul_u256(&squared.0, &R_INVERSE, &constants::L.0);
+        let squared_r_inverse = risc0::modmul_u256(&squared, &R_INVERSE, &constants::L.0);
         ScalarR0(squared_r_inverse)
     }
 
