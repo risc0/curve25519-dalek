@@ -88,20 +88,20 @@ impl ScalarR0 {
 
     /// Compute `-1 * a` (mod l).
     pub fn negate(a: &ScalarR0) -> ScalarR0 {
-        let result = risc0::modmul_u256_denormalized(&a.0, &Self::MINUS_ONE.0, &constants::L.0);
+        let result = risc0::modmul_u256(&a.0, &Self::MINUS_ONE.0, &constants::L.0);
         ScalarR0(result)
     }
 
     /// Compute `a` (mod l).
     pub fn reduce(a: &ScalarR0) -> ScalarR0 {
-        let result = risc0::modmul_u256_denormalized(&a.0, &U256::ONE, &constants::L.0);
+        let result = risc0::modmul_u256(&a.0, &U256::ONE, &constants::L.0);
         ScalarR0(result)
     }
 
     /// Compute `a * b` (mod l).
     #[inline(never)]
     pub fn mul(a: &ScalarR0, b: &ScalarR0) -> ScalarR0 {
-        let ab = risc0::modmul_u256_denormalized(&a.0, &b.0, &constants::L.0);
+        let ab = risc0::modmul_u256(&a.0, &b.0, &constants::L.0);
         ScalarR0(ab)
     }
 
@@ -109,7 +109,7 @@ impl ScalarR0 {
     #[inline(never)]
     #[allow(dead_code)] // XXX we don't expose square() via the Scalar API
     pub fn square(&self) -> ScalarR0 {
-        let aa = risc0::modmul_u256_denormalized(&self.0, &self.0, &constants::L.0);
+        let aa = risc0::modmul_u256(&self.0, &self.0, &constants::L.0);
         ScalarR0(aa)
     }
 
@@ -124,9 +124,8 @@ impl ScalarR0 {
     /// Compute `(a^2) / R` (mod l) in Montgomery form, where R is the Montgomery modulus 2^261
     #[inline(never)]
     pub fn montgomery_square(&self) -> ScalarR0 {
-        let squared = self.square();
-        let squared_r_inverse =
-            risc0::modmul_u256_denormalized(&squared.0, &R_INVERSE, &constants::L.0);
+        let squared = risc0::modmul_u256_denormalized(&self.0, &self.0, &constants::L.0);
+        let squared_r_inverse = risc0::modmul_u256(&squared.0, &R_INVERSE, &constants::L.0);
         ScalarR0(squared_r_inverse)
     }
 

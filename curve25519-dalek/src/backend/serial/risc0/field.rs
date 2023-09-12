@@ -1,5 +1,5 @@
 //! Field arithmetic modulo \\(p = 2\^{255} - 19\\), using \\(32\\)-bit
-//! limbs with \\(64\\)-bit products.
+//! limbs
 
 use core::fmt::Debug;
 use core::ops::Neg;
@@ -15,7 +15,7 @@ use zeroize::Zeroize;
 
 /// A `FieldElementR0` represents an element of the field
 /// \\( \mathbb Z / (2\^{255} - 19)\\). `FieldElementR0`
-/// leverages RISC0's big integer accelerated zkvm circuit.
+/// leverages RISC Zero's big integer accelerated zkvm circuit.
 ///
 /// # Note
 ///
