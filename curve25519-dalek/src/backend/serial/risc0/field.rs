@@ -37,7 +37,7 @@ const MODULUS_CORRECTION: U256 = U256::ZERO.wrapping_sub(&P);
 pub struct FieldElementR0(pub(crate) U256);
 
 impl Debug for FieldElementR0 {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         write!(
             f,
             "FieldElementR0(U256::from_be_hex({:?}))",

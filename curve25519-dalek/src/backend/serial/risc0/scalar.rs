@@ -22,7 +22,7 @@ const TWO_POW_TWO_FIFTY_SIX: U256 =
 pub struct ScalarR0(pub U256);
 
 impl Debug for ScalarR0 {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         write!(f, "ScalarR0: {:?}", &self.0)
     }
 }
