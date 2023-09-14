@@ -115,6 +115,7 @@ where
 }
 
 fn get_test_vectors() -> impl Iterator<Item = TestVector> {
+    // Include the test vectors file directly. Note that this makes the test binary large.
     let validationvectors_bytes = include_bytes!("../VALIDATIONVECTORS");
     serde_json::from_reader::<_, Vec<IntermediateTestVector>>(validationvectors_bytes.as_slice())
         .unwrap()

@@ -44,6 +44,7 @@ mod vectors {
         let mut line: String;
         let mut lineno: usize = 0;
 
+        // Include the test vectors file directly. Note that this makes the test binary large.
         let testvectors_bytes = include_bytes!("../TESTVECTORS");
         let file = BufReader::new(testvectors_bytes.as_slice());
 
