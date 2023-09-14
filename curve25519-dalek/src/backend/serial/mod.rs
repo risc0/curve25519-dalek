@@ -24,9 +24,11 @@ cfg_if! {
     if #[cfg(curve25519_dalek_backend = "fiat")] {
 
         #[cfg(curve25519_dalek_bits = "32")]
+        #[doc(hidden)]
         pub mod fiat_u32;
 
         #[cfg(curve25519_dalek_bits = "64")]
+        #[doc(hidden)]
         pub mod fiat_u64;
 
     } else if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
@@ -36,9 +38,11 @@ cfg_if! {
     } else {
 
         #[cfg(curve25519_dalek_bits = "32")]
+        #[doc(hidden)]
         pub mod u32;
 
         #[cfg(curve25519_dalek_bits = "64")]
+        #[doc(hidden)]
         pub mod u64;
 
     }

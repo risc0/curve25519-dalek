@@ -1,24 +1,14 @@
-# ed25519-dalek [![](https://img.shields.io/crates/v/ed25519-dalek.svg)](https://crates.io/crates/ed25519-dalek) [![](https://docs.rs/ed25519-dalek/badge.svg)](https://docs.rs/ed25519-dalek) [![Rust](https://github.com/dalek-cryptography/ed25519-dalek/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/dalek-cryptography/ed25519-dalek/actions/workflows/rust.yml)
+# ed25519-dalek [![](https://img.shields.io/crates/v/ed25519-dalek.svg)](https://crates.io/crates/ed25519-dalek) [![](https://docs.rs/ed25519-dalek/badge.svg)](https://docs.rs/ed25519-dalek) [![CI](https://github.com/dalek-cryptography/curve25519-dalek/actions/workflows/ed25519-dalek.yml/badge.svg?branch=main)](https://github.com/dalek-cryptography/curve25519-dalek/actions/workflows/ed25519-dalek.yml)
 
 Fast and efficient Rust implementation of ed25519 key generation, signing, and
 verification.
 
 # Use
 
-## Stable
-
 To import `ed25519-dalek`, add the following to the dependencies section of
 your project's `Cargo.toml`:
 ```toml
-ed25519-dalek = "1"
-```
-
-## Beta
-
-To use the latest prerelease (see changes [below](#breaking-changes-in-200)),
-use the following line in your project's `Cargo.toml`:
-```toml
-ed25519-dalek = "2.0.0-rc.3"
+ed25519-dalek = "2"
 ```
 
 # Feature Flags

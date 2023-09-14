@@ -9,7 +9,7 @@
 
 //! Integration tests for ed25519-dalek.
 
-use curve25519_dalek;
+#![allow(clippy::items_after_test_module)]
 
 use ed25519_dalek::*;
 
@@ -44,6 +44,7 @@ mod vectors {
         let mut line: String;
         let mut lineno: usize = 0;
 
+        // Include the test vectors file directly. Note that this makes the test binary large.
         let testvectors_bytes = include_bytes!("../TESTVECTORS");
         let file = BufReader::new(testvectors_bytes.as_slice());
 
@@ -54,10 +55,10 @@ mod vectors {
             let parts: Vec<&str> = line.split(':').collect();
             assert_eq!(parts.len(), 5, "wrong number of fields in line {}", lineno);
 
-            let sec_bytes: Vec<u8> = FromHex::from_hex(&parts[0]).unwrap();
-            let pub_bytes: Vec<u8> = FromHex::from_hex(&parts[1]).unwrap();
-            let msg_bytes: Vec<u8> = FromHex::from_hex(&parts[2]).unwrap();
-            let sig_bytes: Vec<u8> = FromHex::from_hex(&parts[3]).unwrap();
+            let sec_bytes: Vec<u8> = FromHex::from_hex(parts[0]).unwrap();
+            let pub_bytes: Vec<u8> = FromHex::from_hex(parts[1]).unwrap();
+            let msg_bytes: Vec<u8> = FromHex::from_hex(parts[2]).unwrap();
+            let sig_bytes: Vec<u8> = FromHex::from_hex(parts[3]).unwrap();
 
             let sec_bytes = &sec_bytes[..SECRET_KEY_LENGTH].try_into().unwrap();
             let pub_bytes = &pub_bytes[..PUBLIC_KEY_LENGTH].try_into().unwrap();
@@ -152,13 +153,13 @@ mod vectors {
         let mut h = Sha512::default();
         if let Some(c) = context {
             h.update(b"SigEd25519 no Ed25519 collisions");
-            h.update(&[1]);
-            h.update(&[c.len() as u8]);
+            h.update([1]);
+            h.update([c.len() as u8]);
             h.update(c);
         }
-        h.update(&signature_r.compress().as_bytes());
+        h.update(signature_r.compress().as_bytes());
         h.update(&pub_key.compress().as_bytes()[..]);
-        h.update(&message);
+        h.update(message);
         Scalar::from_hash(h)
     }
 
@@ -214,7 +215,7 @@ mod vectors {
         //        = R + H(R || A || M₂) · A
         // Check that this is true
         let signature = serialize_signature(&r, &s);
-        let vk = VerifyingKey::from_bytes(&pubkey.compress().as_bytes()).unwrap();
+        let vk = VerifyingKey::from_bytes(pubkey.compress().as_bytes()).unwrap();
         let sig = Signature::try_from(&signature[..]).unwrap();
         assert!(vk.verify(message1, &sig).is_ok());
         assert!(vk.verify(message2, &sig).is_ok());
@@ -256,7 +257,7 @@ mod vectors {
 
         // Check that verify_prehashed succeeds on both sigs
         let signature = serialize_signature(&r, &s);
-        let vk = VerifyingKey::from_bytes(&pubkey.compress().as_bytes()).unwrap();
+        let vk = VerifyingKey::from_bytes(pubkey.compress().as_bytes()).unwrap();
         let sig = Signature::try_from(&signature[..]).unwrap();
         assert!(vk
             .verify_prehashed(message1.clone(), context_str, &sig)
@@ -286,45 +287,42 @@ mod integrations {
     #[test]
     fn sign_verify() {
         // TestSignVerify
-        let signing_key: SigningKey;
-        let good_sig: Signature;
-        let bad_sig: Signature;
 
         let good: &[u8] = "test message".as_bytes();
         let bad: &[u8] = "wrong message".as_bytes();
 
         let mut csprng = OsRng;
 
-        signing_key = SigningKey::generate(&mut csprng);
+        let signing_key: SigningKey = SigningKey::generate(&mut csprng);
         let verifying_key = signing_key.verifying_key();
-        good_sig = signing_key.sign(&good);
-        bad_sig = signing_key.sign(&bad);
+        let good_sig: Signature = signing_key.sign(good);
+        let bad_sig: Signature = signing_key.sign(bad);
 
         // Check that an honestly generated public key is not weak
         assert!(!verifying_key.is_weak());
 
         assert!(
-            signing_key.verify(&good, &good_sig).is_ok(),
+            signing_key.verify(good, &good_sig).is_ok(),
             "Verification of a valid signature failed!"
         );
         assert!(
-            verifying_key.verify_strict(&good, &good_sig).is_ok(),
+            verifying_key.verify_strict(good, &good_sig).is_ok(),
             "Strict verification of a valid signature failed!"
         );
         assert!(
-            signing_key.verify(&good, &bad_sig).is_err(),
+            signing_key.verify(good, &bad_sig).is_err(),
             "Verification of a signature on a different message passed!"
         );
         assert!(
-            verifying_key.verify_strict(&good, &bad_sig).is_err(),
+            verifying_key.verify_strict(good, &bad_sig).is_err(),
             "Strict verification of a signature on a different message passed!"
         );
         assert!(
-            signing_key.verify(&bad, &good_sig).is_err(),
+            signing_key.verify(bad, &good_sig).is_err(),
             "Verification of a signature on a different message passed!"
         );
         assert!(
-            verifying_key.verify_strict(&bad, &good_sig).is_err(),
+            verifying_key.verify_strict(bad, &good_sig).is_err(),
             "Strict verification of a signature on a different message passed!"
         );
     }
@@ -332,10 +330,6 @@ mod integrations {
     #[cfg(feature = "digest")]
     #[test]
     fn ed25519ph_sign_verify() {
-        let signing_key: SigningKey;
-        let good_sig: Signature;
-        let bad_sig: Signature;
-
         let good: &[u8] = b"test message";
         let bad: &[u8] = b"wrong message";
 
@@ -356,12 +350,12 @@ mod integrations {
 
         let context: &[u8] = b"testing testing 1 2 3";
 
-        signing_key = SigningKey::generate(&mut csprng);
+        let signing_key: SigningKey = SigningKey::generate(&mut csprng);
         let verifying_key = signing_key.verifying_key();
-        good_sig = signing_key
+        let good_sig: Signature = signing_key
             .sign_prehashed(prehashed_good1, Some(context))
             .unwrap();
-        bad_sig = signing_key
+        let bad_sig: Signature = signing_key
             .sign_prehashed(prehashed_bad1, Some(context))
             .unwrap();
 
@@ -418,9 +412,9 @@ mod integrations {
         let mut signing_keys: Vec<SigningKey> = Vec::new();
         let mut signatures: Vec<Signature> = Vec::new();
 
-        for i in 0..messages.len() {
+        for msg in messages {
             let signing_key: SigningKey = SigningKey::generate(&mut csprng);
-            signatures.push(signing_key.sign(&messages[i]));
+            signatures.push(signing_key.sign(msg));
             signing_keys.push(signing_key);
         }
         let verifying_keys: Vec<VerifyingKey> =
@@ -442,9 +436,9 @@ mod integrations {
 
         m.insert(public_from_secret, "Updated Value");
 
-        let (k, v) = m.get_key_value(&public_from_secret).unwrap();
+        let (k, &v) = m.get_key_value(&public_from_secret).unwrap();
         assert_eq!(k, &public_from_secret);
-        assert_eq!(v.clone(), "Updated Value");
+        assert_eq!(v, "Updated Value");
         assert_eq!(m.len(), 1usize);
 
         let second_secret: SigningKey = SigningKey::generate(&mut csprng);
@@ -452,9 +446,9 @@ mod integrations {
         assert_ne!(public_from_secret, public_from_second_secret);
         m.insert(public_from_second_secret, "Second public key");
 
-        let (k, v) = m.get_key_value(&public_from_second_secret).unwrap();
+        let (k, &v) = m.get_key_value(&public_from_second_secret).unwrap();
         assert_eq!(k, &public_from_second_secret);
-        assert_eq!(v.clone(), "Second public key");
+        assert_eq!(v, "Second public key");
         assert_eq!(m.len(), 2usize);
     }
 }
@@ -468,6 +462,8 @@ struct Demo {
 
 #[cfg(all(test, feature = "serde"))]
 mod serialisation {
+    #![allow(clippy::zero_prefixed_literal)]
+
     use super::*;
 
     // The size for bincode to serialize the length of a byte array.
@@ -538,7 +534,7 @@ mod serialisation {
         // derived from `serialize_deserialize_verifying_key_json` test
         // trailing zero elements makes key too long (34 bytes)
         let encoded_verifying_key_too_long = "[130,39,155,15,62,76,188,63,124,122,26,251,233,253,225,220,14,41,166,120,108,35,254,77,160,83,172,58,219,42,86,120,0,0]";
-        let de_err = serde_json::from_str::<VerifyingKey>(&encoded_verifying_key_too_long)
+        let de_err = serde_json::from_str::<VerifyingKey>(encoded_verifying_key_too_long)
             .unwrap_err()
             .to_string();
         assert!(
@@ -551,7 +547,7 @@ mod serialisation {
     fn serialize_deserialize_verifying_key_json_too_short() {
         // derived from `serialize_deserialize_verifying_key_json` test
         let encoded_verifying_key_too_long = "[130,39,155,15]";
-        let de_err = serde_json::from_str::<VerifyingKey>(&encoded_verifying_key_too_long)
+        let de_err = serde_json::from_str::<VerifyingKey>(encoded_verifying_key_too_long)
             .unwrap_err()
             .to_string();
         assert!(
@@ -566,6 +562,7 @@ mod serialisation {
         let encoded_signing_key: Vec<u8> = bincode::serialize(&signing_key).unwrap();
         let decoded_signing_key: SigningKey = bincode::deserialize(&encoded_signing_key).unwrap();
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..SECRET_KEY_LENGTH {
             assert_eq!(SECRET_KEY_BYTES[i], decoded_signing_key.to_bytes()[i]);
         }
@@ -577,6 +574,7 @@ mod serialisation {
         let encoded_signing_key = serde_json::to_string(&signing_key).unwrap();
         let decoded_signing_key: SigningKey = serde_json::from_str(&encoded_signing_key).unwrap();
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..SECRET_KEY_LENGTH {
             assert_eq!(SECRET_KEY_BYTES[i], decoded_signing_key.to_bytes()[i]);
         }
@@ -587,7 +585,7 @@ mod serialisation {
         // derived from `serialize_deserialize_signing_key_json` test
         // trailing zero elements makes key too long (34 bytes)
         let encoded_signing_key_too_long = "[62,70,27,163,92,182,11,3,77,234,98,4,11,127,79,228,243,187,150,73,201,137,76,22,85,251,152,2,241,42,72,54,0,0]";
-        let de_err = serde_json::from_str::<SigningKey>(&encoded_signing_key_too_long)
+        let de_err = serde_json::from_str::<SigningKey>(encoded_signing_key_too_long)
             .unwrap_err()
             .to_string();
         assert!(
@@ -600,7 +598,7 @@ mod serialisation {
     fn serialize_deserialize_signing_key_json_too_short() {
         // derived from `serialize_deserialize_signing_key_json` test
         let encoded_signing_key_too_long = "[62,70,27,163]";
-        let de_err = serde_json::from_str::<SigningKey>(&encoded_signing_key_too_long)
+        let de_err = serde_json::from_str::<SigningKey>(encoded_signing_key_too_long)
             .unwrap_err()
             .to_string();
         assert!(

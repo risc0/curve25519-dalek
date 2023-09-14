@@ -4,14 +4,14 @@ name = "curve25519-dalek"
 # - update CHANGELOG
 # - update README if required by semver
 # - if README was updated, also update module documentation in src/lib.rs
-version = "4.0.0-rc.3"
+version = "4.1.0"
 edition = "2021"
 rust-version = "1.60.0"
 authors = ["Isis Lovecruft <isis@patternsinthevoid.net>",
            "Henry de Valence <hdevalence@hdevalence.ca>"]
 readme = "README.md"
 license = "BSD-3-Clause"
-repository = "https://github.com/dalek-cryptography/curve25519-dalek"
+repository = "https://github.com/dalek-cryptography/curve25519-dalek/tree/main/curve25519-dalek"
 homepage = "https://github.com/dalek-cryptography/curve25519-dalek"
 documentation = "https://docs.rs/curve25519-dalek"
 categories = ["cryptography", "no-std"]
@@ -32,6 +32,7 @@ features = ["serde", "rand_core", "digest", "legacy_compatibility"]
 [dev-dependencies]
 sha2 = { version = "0.10", default-features = false }
 bincode = "1"
+hex = "0.4.2"
 rand = "0.8"
 rand_core = { version = "0.6", default-features = false, features = ["getrandom"] }
 
@@ -46,6 +47,7 @@ required-features = ["alloc", "rand_core"]
 
 [dependencies]
 cfg-if = "1"
+group = { version = "0.13", default-features = false, optional = true }
 rand_core = { version = "0.6.4", default-features = false, optional = true }
 digest = { version = "0.10", default-features = false, optional = true }
 subtle = { version = "2.3.0", default-features = false }
@@ -53,14 +55,14 @@ serde = { version = "1.0", default-features = false, optional = true, features =
 zeroize = { version = "1", default-features = false, optional = true }
 
 [target.'cfg(target_os = "zkvm")'.dependencies]
-crypto-bigint = { version = "0.5", default-features = false, features = ["zeroize"] }
-hex = "0.4.3"
+# Use crypto-bigint v0.5.2, which is overridden with a patch for RISC Zero acceleration.
+crypto-bigint = { version = "=0.5.2", default-features = false, features = ["zeroize"] }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 cpufeatures = "0.2.6"
 
 [target.'cfg(curve25519_dalek_backend = "fiat")'.dependencies]
-fiat-crypto = "0.1.19"
+fiat-crypto = { version = "0.2.1", default-features = false }
 
 [target.'cfg(not(target_os = "zkvm"))'.dev-dependencies]
 criterion = { version = "0.5.1", features = ["html_reports"] }
@@ -70,6 +72,7 @@ default = ["alloc", "precomputed-tables", "zeroize"]
 alloc = ["zeroize?/alloc"]
 precomputed-tables = []
 legacy_compatibility = []
+group = ["dep:group", "rand_core"]
 
 [target.'cfg(all(not(curve25519_dalek_backend = "fiat"), not(curve25519_dalek_backend = "serial"), target_arch = "x86_64"))'.dependencies]
 curve25519-dalek-derive = { version = "0.1", path = "../curve25519-dalek-derive" }

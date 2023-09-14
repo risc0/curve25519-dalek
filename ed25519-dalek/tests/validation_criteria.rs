@@ -89,7 +89,7 @@ impl From<IntermediateTestVector> for TestVector {
         let msg = tv.msg.as_bytes().to_vec();
 
         // Unwrap the Option<Set<Flag>>
-        let flags = tv.flags.unwrap_or_else(Default::default);
+        let flags = tv.flags.unwrap_or_default();
 
         Self {
             number,
@@ -115,6 +115,7 @@ where
 }
 
 fn get_test_vectors() -> impl Iterator<Item = TestVector> {
+    // Include the test vectors file directly. Note that this makes the test binary large.
     let validationvectors_bytes = include_bytes!("../VALIDATIONVECTORS");
     serde_json::from_reader::<_, Vec<IntermediateTestVector>>(validationvectors_bytes.as_slice())
         .unwrap()

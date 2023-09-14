@@ -177,11 +177,7 @@ mod test {
 
     /// Test that d = -121665/121666
     #[test]
-    #[cfg(all(
-        curve25519_dalek_bits = "64",
-        not(curve25519_dalek_backend = "fiat"),
-        not(target_os = "zkvm")
-    ))]
+    #[cfg(all(curve25519_dalek_bits = "64", not(curve25519_dalek_backend = "fiat")))]
     fn test_d_vs_ratio() {
         use crate::backend::serial::u64::field::FieldElement51;
         let a = -&FieldElement51([121665, 0, 0, 0, 0]);
@@ -194,7 +190,7 @@ mod test {
 
     /// Test that d = -121665/121666
     #[test]
-    #[cfg(all(target_os = "zkvm"))]
+    #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
     fn test_d_vs_ratio() {
         use crate::backend::serial::risc0::field::FieldElementR0;
         use crypto_bigint::U256;

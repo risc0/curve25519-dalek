@@ -22,7 +22,7 @@ const TWO_POW_TWO_FIFTY_SIX: U256 =
 pub struct ScalarR0(pub U256);
 
 impl Debug for ScalarR0 {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         write!(f, "ScalarR0: {:?}", &self.0)
     }
 }
@@ -117,7 +117,7 @@ impl ScalarR0 {
     #[inline(never)]
     pub fn montgomery_mul(a: &ScalarR0, b: &ScalarR0) -> ScalarR0 {
         let ab = risc0::modmul_u256_denormalized(&a.0, &b.0, &constants::L.0);
-        let ab_r_inverse = risc0::modmul_u256_denormalized(&ab, &R_INVERSE, &constants::L.0);
+        let ab_r_inverse = risc0::modmul_u256(&ab, &R_INVERSE, &constants::L.0);
         ScalarR0(ab_r_inverse)
     }
 
@@ -132,14 +132,14 @@ impl ScalarR0 {
     /// Puts a ScalarR0 in to Montgomery form, i.e. computes `a*R (mod l)`
     #[inline(never)]
     pub fn as_montgomery(&self) -> ScalarR0 {
-        let result = risc0::modmul_u256_denormalized(&self.0, &constants::R.0, &constants::L.0);
+        let result = risc0::modmul_u256(&self.0, &constants::R.0, &constants::L.0);
         ScalarR0(result)
     }
 
     /// Takes a ScalarR0 out of Montgomery form, i.e. computes `a/R (mod l)`
     #[allow(clippy::wrong_self_convention)]
     pub fn from_montgomery(&self) -> ScalarR0 {
-        let a_r_inverse = risc0::modmul_u256_denormalized(&self.0, &R_INVERSE, &constants::L.0);
+        let a_r_inverse = risc0::modmul_u256(&self.0, &R_INVERSE, &constants::L.0);
         ScalarR0(a_r_inverse)
     }
 }
