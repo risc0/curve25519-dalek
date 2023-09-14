@@ -30,7 +30,9 @@ use zeroize::Zeroize;
 const P: U256 =
     U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFED");
 
-// Low two words of 2^256 - P, used for correcting the value after addition mod 2^256.
+// Zero minus the modulus, using wrapping 256-bit arithmatic.
+// Used for turning an single additive overflow into a reduction.
+// Only two words of this value are non-zero.
 const MODULUS_CORRECTION: U256 = U256::ZERO.wrapping_sub(&P);
 
 #[derive(Copy, Clone)]
@@ -194,6 +196,7 @@ impl FieldElementR0 {
         let val_words = val.as_words_mut();
         val_words[7] = val_words[7] & 0x7FFFFFFF;
         let val = U256::from_words(*val_words);
+        // Use a modular multiplication by one to reduce the value to [0, p).
         let val = risc0::modmul_u256_denormalized(&val, &FieldElementR0::ONE.0, &P);
         FieldElementR0(val)
     }
