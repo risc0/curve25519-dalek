@@ -31,7 +31,6 @@ mod vectors {
 
     use std::{
         convert::TryFrom,
-        fs::File,
         io::{BufRead, BufReader},
         ops::Neg,
     };
@@ -45,16 +44,9 @@ mod vectors {
         let mut line: String;
         let mut lineno: usize = 0;
 
-        let f = File::open("TESTVECTORS");
-        if f.is_err() {
-            println!(
-                "This test is only available when the code has been cloned \
-                 from the git repository, since the TESTVECTORS file is large \
-                 and is therefore not included within the distributed crate."
-            );
-            panic!();
-        }
-        let file = BufReader::new(f.unwrap());
+        // Include the test vectors file directly. Note that this makes the test binary large.
+        let testvectors_bytes = include_bytes!("../TESTVECTORS");
+        let file = BufReader::new(testvectors_bytes.as_slice());
 
         for l in file.lines() {
             lineno += 1;
