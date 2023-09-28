@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: risc0/risc0/.github/actions/rustup
+    - uses: risc0/risc0/.github/actions/rustup@main
     - env:
         INPUT_TOOLCHAIN: 'nightly'
     - run: cargo test
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: risc0/risc0/.github/actions/rustup
+    - uses: risc0/risc0/.github/actions/rustup@main
     - name: Build u32 bench
       env:
         RUSTFLAGS: '--cfg curve25519_dalek_bits="32"'
@@ -71,7 +71,7 @@ jobs:
           - crate: x25519-dalek
     steps:
       - uses: actions/checkout@v3
-      - uses: risc0/risc0/.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@main
         with:
           toolchain: stable
           targets: thumbv7em-none-eabi
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: risc0/risc0/.github/actions/rustup
+    - uses: risc0/risc0/.github/actions/rustup@main
       with:
         components: clippy
     - env:
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: risc0/risc0/.github/actions/rustup
+    - uses: risc0/risc0/.github/actions/rustup@main
       with:
         components: rustfmt
     - run: cargo fmt --all -- --check
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: risc0/risc0/.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@main
         with:
           toolchain: stable
       - run: cargo doc --all-features

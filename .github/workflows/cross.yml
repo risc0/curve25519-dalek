@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: ${{ matrix.deps }}
-      - uses: risc0/risc0/.github/actions/rustup
+      - uses: risc0/risc0/.github/actions/rustup@main
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
