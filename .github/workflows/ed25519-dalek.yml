@@ -29,8 +29,8 @@ jobs:
     - uses: risc0/risc0/.github/actions/rustup@main
     - env:
         INPUT_TOOLCHAIN: 'nightly'
-    - run: cargo -Z minimal-versions check --no-default-features --features serde
+      run: cargo -Z minimal-versions check --no-default-features --features serde
       # Now check that `cargo build` works with respect to the oldest possible
       # deps and the stated MSRV
-    - uses: dtolnay/rust-toolchain@1.60.0
+    - uses: risc0/risc0/.github/actions/rustup@main
     - run: cargo build
