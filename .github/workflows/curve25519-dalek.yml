@@ -149,8 +149,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: risc0/risc0/.github/actions/rustup@main
-        with:
-          toolchain: nightly-2023-03-06
       - run: git clone https://github.com/risc0/risc0.git
       - run: cargo install cargo-risczero --path risc0/risc0/cargo-risczero --features experimental
       - run: cargo risczero test -- --release --all-features
