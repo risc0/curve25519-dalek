@@ -152,5 +152,5 @@ jobs:
         with:
           toolchain: nightly-2023-03-06
       - run: git clone https://github.com/risc0/risc0.git
-      - run: cargo install cargo-risczero --path risc0/risc0/cargo-risczero
+      - run: cargo install cargo-risczero --path risc0/risc0/cargo-risczero --features experimental
       - run: cargo risczero test -- --release --all-features
