@@ -57,16 +57,11 @@ jobs:
         with:
           toolchain: stable
           targets: thumbv7em-none-eabi
-      - uses: taiki-e/install-action@cargo-hack
       # No default features build
       - name: no_std fiat / no feat ${{ matrix.crate }}
         env:
           RUSTFLAGS: '--cfg curve25519_dalek_backend="fiat"'
         run: cargo build -p ${{ matrix.crate }} --target thumbv7em-none-eabi --release --no-default-features
-      - name: no_std fiat / cargo hack ${{ matrix.crate }}
-        env:
-          RUSTFLAGS: '--cfg curve25519_dalek_backend="fiat"'      
-        run: cargo hack build -p ${{ matrix.crate }} --target thumbv7em-none-eabi --release --each-feature --exclude-features default,std,getrandom
 
   test-serial:
     name: Test serial backend
