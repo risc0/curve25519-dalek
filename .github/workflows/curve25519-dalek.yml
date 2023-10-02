@@ -135,7 +135,7 @@ jobs:
     - env:
         INPUT_TOOLCHAIN: 'nightly'
       uses: risc0/risc0/.github/actions/rustup@main
-      run: cargo -Z minimal-versions check --no-default-features --features serde
+    - run: cargo -Z minimal-versions check --no-default-features --features serde
     # Now check that `cargo build` works with respect to the oldest possible
     # deps and the stated MSRV
     - uses: risc0/risc0/.github/actions/rustup@main
