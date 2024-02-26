@@ -7,7 +7,7 @@ use core::ops::{Add, AddAssign};
 use core::ops::{Mul, MulAssign};
 use core::ops::{Sub, SubAssign};
 
-use crypto_bigint::{risc0, Encoding, U256};
+use crypto_bigint::{risc0, Limb, Encoding, U256};
 use subtle::{Choice, ConditionallySelectable, ConstantTimeLess};
 
 #[cfg(feature = "zeroize")]
@@ -29,11 +29,6 @@ use zeroize::Zeroize;
 /// prime 2^255 - 19 which defines the field.
 const P: U256 =
     U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFED");
-
-// Zero minus the modulus, using wrapping 256-bit arithmatic.
-// Used for turning an single additive overflow into a reduction.
-// Only two words of this value are non-zero.
-const MODULUS_CORRECTION: U256 = U256::ZERO.wrapping_sub(&P);
 
 #[derive(Copy, Clone)]
 pub struct FieldElementR0(pub(crate) U256);
@@ -59,25 +54,24 @@ impl<'b> AddAssign<&'b FieldElementR0> for FieldElementR0 {
     fn add_assign(&mut self, rhs: &'b FieldElementR0) {
         let self_limbs = self.0.as_limbs();
         let rhs_limbs = rhs.0.as_limbs();
-        let correction_limbs = MODULUS_CORRECTION.as_limbs();
 
         // Carrying addition of self and rhs, with the overflow correction added in.
         // Correction is added to carries with wrapping_add since they cannot overflow.
-        let (a0, carry0) = self_limbs[0].adc(rhs_limbs[0], correction_limbs[0]);
+        let (a0, carry0) = self_limbs[0].adc(rhs_limbs[0], Limb::ZERO);
         let (a1, carry1) =
-            self_limbs[1].adc(rhs_limbs[1], carry0.wrapping_add(correction_limbs[1]));
+            self_limbs[1].adc(rhs_limbs[1], carry0);
         let (a2, carry2) =
-            self_limbs[2].adc(rhs_limbs[2], carry1.wrapping_add(correction_limbs[2]));
+            self_limbs[2].adc(rhs_limbs[2], carry1);
         let (a3, carry3) =
-            self_limbs[3].adc(rhs_limbs[3], carry2.wrapping_add(correction_limbs[3]));
+            self_limbs[3].adc(rhs_limbs[3], carry2);
         let (a4, carry4) =
-            self_limbs[4].adc(rhs_limbs[4], carry3.wrapping_add(correction_limbs[4]));
+            self_limbs[4].adc(rhs_limbs[4], carry3);
         let (a5, carry5) =
-            self_limbs[5].adc(rhs_limbs[5], carry4.wrapping_add(correction_limbs[5]));
+            self_limbs[5].adc(rhs_limbs[5], carry4);
         let (a6, carry6) =
-            self_limbs[6].adc(rhs_limbs[6], carry5.wrapping_add(correction_limbs[6]));
+            self_limbs[6].adc(rhs_limbs[6], carry5);
         let (a7, carry7) =
-            self_limbs[7].adc(rhs_limbs[7], carry6.wrapping_add(correction_limbs[7]));
+            self_limbs[7].adc(rhs_limbs[7], carry6);
         self.0 = U256::from([a0, a1, a2, a3, a4, a5, a6, a7]);
 
         // a cooperative prover can make sure that overflow can never happen
