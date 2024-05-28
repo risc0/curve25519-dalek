@@ -112,8 +112,6 @@
 //! has been enabled.
 
 use core::borrow::Borrow;
-use core::cmp::{Eq, PartialEq};
-use core::convert::TryInto;
 use core::fmt::Debug;
 use core::iter::{Product, Sum};
 use core::ops::Index;
@@ -125,10 +123,12 @@ use core::ops::{Sub, SubAssign};
 use cfg_if::cfg_if;
 
 #[cfg(feature = "group")]
-use {
-    group::ff::{Field, FromUniformBytes, PrimeField},
-    rand_core::RngCore,
-};
+use group::ff::{Field, FromUniformBytes, PrimeField};
+#[cfg(feature = "group-bits")]
+use group::ff::{FieldBits, PrimeFieldBits};
+
+#[cfg(any(test, feature = "group"))]
+use rand_core::RngCore;
 
 #[cfg(any(test, feature = "rand_core"))]
 use rand_core::CryptoRngCore;
@@ -292,7 +292,7 @@ impl Scalar {
 }
 
 impl Debug for Scalar {
-    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Scalar{{\n\tbytes: {:?},\n}}", &self.bytes)
     }
 }
@@ -413,7 +413,7 @@ impl ConditionallySelectable for Scalar {
 #[cfg(feature = "serde")]
 use serde::de::Visitor;
 #[cfg(feature = "serde")]
-use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
@@ -443,7 +443,7 @@ impl<'de> Deserialize<'de> for Scalar {
         impl<'de> Visitor<'de> for ScalarVisitor {
             type Value = Scalar;
 
-            fn expecting(&self, formatter: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 formatter.write_str(
                     "a sequence of 32 bytes whose little-endian interpretation is less than the \
                     basepoint order ℓ",
@@ -844,7 +844,7 @@ impl Scalar {
         }
 
         #[cfg(feature = "zeroize")]
-        zeroize::Zeroize::zeroize(&mut scratch);
+        Zeroize::zeroize(&mut scratch);
 
         ret
     }
@@ -1254,10 +1254,12 @@ impl Field for Scalar {
     }
 
     fn sqrt_ratio(num: &Self, div: &Self) -> (Choice, Self) {
+        #[allow(unused_qualifications)]
         group::ff::helpers::sqrt_ratio_generic(num, div)
     }
 
     fn sqrt(&self) -> CtOption<Self> {
+        #[allow(unused_qualifications)]
         group::ff::helpers::sqrt_tonelli_shanks(
             self,
             [
@@ -1342,6 +1344,19 @@ impl PrimeField for Scalar {
     };
 }
 
+#[cfg(feature = "group-bits")]
+impl PrimeFieldBits for Scalar {
+    type ReprBits = [u8; 32];
+
+    fn to_le_bits(&self) -> FieldBits<Self::ReprBits> {
+        self.to_repr().into()
+    }
+
+    fn char_le_bits() -> FieldBits<Self::ReprBits> {
+        constants::BASEPOINT_ORDER_PRIVATE.to_bytes().into()
+    }
+}
+
 #[cfg(feature = "group")]
 impl FromUniformBytes<64> for Scalar {
     fn from_uniform_bytes(bytes: &[u8; 64]) -> Self {
@@ -1404,8 +1419,6 @@ pub(crate) mod test {
 
     #[cfg(feature = "alloc")]
     use alloc::vec::Vec;
-
-    use rand::RngCore;
 
     /// x = 2238329342913194256032495932344128051776374960164957527413114840482143558222
     pub static X: Scalar = Scalar {
