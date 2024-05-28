@@ -5,6 +5,15 @@ major series.
 
 ## 4.x series
 
+### 4.1.2
+
+* Fix nightly SIMD build
+
+### 4.1.1
+
+* Mark `constants::BASEPOINT_ORDER` deprecated from pub API
+* Add implementation for `PrimeFieldBits`, behind the `group-bits` feature flag.
+
 ### 4.1.0
 
 * Add arbitrary integer multiplication with `MontgomeryPoint::mul_bits_be`
@@ -118,7 +127,7 @@ major series.
 
 ### 2.1.2
 
-* Multiple documenation typo fixes.
+* Multiple documentation typo fixes.
 * Fix `alloc` feature working with stable rust.
 
 ### 2.1.1
