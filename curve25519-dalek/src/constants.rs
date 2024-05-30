@@ -28,6 +28,8 @@ cfg_if! {
         pub use crate::backend::serial::fiat_u32::constants::*;
         #[cfg(curve25519_dalek_bits = "64")]
         pub use crate::backend::serial::fiat_u64::constants::*;
+    } else if  #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+        pub use crate::backend::serial::risc0::constants::*;
     } else {
         #[cfg(curve25519_dalek_bits = "32")]
         pub use crate::backend::serial::u32::constants::*;
@@ -144,7 +146,11 @@ mod test {
 
     /// Test that d = -121665/121666
     #[test]
-    #[cfg(all(curve25519_dalek_bits = "32", not(curve25519_dalek_backend = "fiat")))]
+    #[cfg(all(
+        curve25519_dalek_bits = "32",
+        not(curve25519_dalek_backend = "fiat"),
+        not(target_os = "zkvm")
+    ))]
     fn test_d_vs_ratio() {
         use crate::backend::serial::u32::field::FieldElement2625;
         let a = -&FieldElement2625([121665, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
@@ -162,6 +168,25 @@ mod test {
         use crate::backend::serial::u64::field::FieldElement51;
         let a = -&FieldElement51([121665, 0, 0, 0, 0]);
         let b = FieldElement51([121666, 0, 0, 0, 0]);
+        let d = &a * &b.invert();
+        let d2 = &d + &d;
+        assert_eq!(d, constants::EDWARDS_D);
+        assert_eq!(d2, constants::EDWARDS_D2);
+    }
+
+    /// Test that d = -121665/121666
+    #[test]
+    #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))]
+    fn test_d_vs_ratio() {
+        use crate::backend::serial::risc0::field::FieldElementR0;
+        use crypto_bigint::U256;
+
+        let a = -&FieldElementR0(U256::from_be_hex(
+            "000000000000000000000000000000000000000000000000000000000001db41",
+        ));
+        let b = FieldElementR0(U256::from_be_hex(
+            "000000000000000000000000000000000000000000000000000000000001db42",
+        ));
         let d = &a * &b.invert();
         let d2 = &d + &d;
         assert_eq!(d, constants::EDWARDS_D);
