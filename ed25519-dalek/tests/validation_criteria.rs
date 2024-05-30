@@ -2,7 +2,7 @@ use ed25519::signature::Verifier;
 use ed25519_dalek::{Signature, VerifyingKey};
 
 use serde::{de::Error as SError, Deserialize, Deserializer};
-use std::{collections::BTreeSet as Set, fs::File};
+use std::collections::BTreeSet as Set;
 
 /// The set of edge cases that [`VerifyingKey::verify()`] permits.
 const VERIFY_ALLOWED_EDGECASES: &[Flag] = &[
@@ -115,13 +115,9 @@ where
 }
 
 fn get_test_vectors() -> impl Iterator<Item = TestVector> {
-    let f = File::open("VALIDATIONVECTORS").expect(
-        "This test is only available when the code has been cloned from the git repository, since
-        the VALIDATIONVECTORS file is large and is therefore not included within the distributed \
-        crate.",
-    );
-
-    serde_json::from_reader::<_, Vec<IntermediateTestVector>>(f)
+    // Include the test vectors file directly. Note that this makes the test binary large.
+    let validationvectors_bytes = include_bytes!("../VALIDATIONVECTORS");
+    serde_json::from_reader::<_, Vec<IntermediateTestVector>>(validationvectors_bytes.as_slice())
         .unwrap()
         .into_iter()
         .map(TestVector::from)
