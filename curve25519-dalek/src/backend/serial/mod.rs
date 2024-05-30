@@ -31,6 +31,10 @@ cfg_if! {
         #[doc(hidden)]
         pub mod fiat_u64;
 
+    } else if #[cfg(all(target_os = "zkvm", target_arch = "riscv32"))] {
+
+        pub mod risc0;
+
     } else {
 
         #[cfg(curve25519_dalek_bits = "32")]
